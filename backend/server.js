@@ -1,8 +1,25 @@
 require('dotenv').config();
 const express = require('express');
 const { google } = require('googleapis');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
+
+app.use(helmet());
+
+app.use(cors());
+
+app.use(morgan('combined'));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100, 
+  message: 'Too many requests from this IP, please try again after a minute'
+});
+app.use(limiter);
 
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
@@ -38,10 +55,9 @@ app.get('/redirect', async (req, res) => {
   try {
     const { tokens } = await oauth2Client.getToken(code);
     oauth2Client.setCredentials(tokens);
-    
 
-    console.log('Received tokens:', tokens);
-    
+    console.log('Tokens received');
+
     res.send('Successfully logged in');
   } catch (error) {
     console.error('Error getting tokens:', error);
@@ -64,7 +80,7 @@ app.get('/events', async (req, res) => {
   try {
     const calendarId = req.query.calendar || 'primary';
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-    
+
     const response = await calendar.events.list({
       calendarId,
       timeMin: new Date().toISOString(),
@@ -72,7 +88,7 @@ app.get('/events', async (req, res) => {
       singleEvents: true,
       orderBy: 'startTime'
     });
-    
+
     res.json(response.data.items);
   } catch (error) {
     console.error('Error fetching events:', error);
