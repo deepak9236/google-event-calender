@@ -10,20 +10,24 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuthStatus();
   }, []);
-  
+
   const checkAuthStatus = async () => {
-    try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/status`, {
-        withCredentials: true
-      });
-      setIsAuthenticated(response.data.isAuthenticated);
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/status`, {
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': 'https://google-event.netlify.app'
+      }
+    });
+    setIsAuthenticated(response.data.isAuthenticated);
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    setIsAuthenticated(false);
+  } finally {
+    setLoading(false);
+  }
+};
   
 
   const logout = async () => {

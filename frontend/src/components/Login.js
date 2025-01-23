@@ -17,7 +17,12 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/url`, {
-        credentials: 'include'
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': 'https://google-event.netlify.app'
+        }
       });
       
       if (!response.ok) {
@@ -32,11 +37,9 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Login failed:', error);
-      // Optionally navigate to error page
       navigate('/error');
     }
   };
-
   return (
 <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full space-y-8">
