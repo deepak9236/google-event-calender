@@ -116,13 +116,16 @@ router.get('/events', async (req, res) => {
   }
 
   try {
+    // Ensure the OAuth client is set up with the stored tokens
+    oauth2Client.setCredentials(req.session.tokens);
+
     const calendarId = req.query.calendar || 'primary';
     const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
 
     const response = await calendar.events.list({
       calendarId,
       timeMin: new Date().toISOString(),
-      maxResults: 15,
+      maxResults: 50,  // Increased from 15 to 50
       singleEvents: true,
       orderBy: 'startTime'
     });
@@ -133,7 +136,6 @@ router.get('/events', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
-
 // Mount all routes under /api
 app.use('/api', router);
 
