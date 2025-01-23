@@ -10,7 +10,12 @@ const app = express();
 
 app.use(helmet());
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://google-event.netlify.app/', // Replace with your deployed frontend URL
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(morgan('combined'));
 
@@ -19,6 +24,7 @@ const limiter = rateLimit({
   max: 100, 
   message: 'Too many requests from this IP, please try again after a minute'
 });
+
 app.use(limiter);
 
 const oauth2Client = new google.auth.OAuth2(
@@ -27,9 +33,26 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.REDIRECT_URL
 );
 
+const session = require('express-session');
+
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+app.use((req, res, next) => {
+  res.status(404).json({ error: 'Not Found' });
+});
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 app.get('/', (req, res) => {

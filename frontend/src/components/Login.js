@@ -16,11 +16,24 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/url`);
-      const { url } = await response.json();
-      window.location.href = url;
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/url`, {
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No URL received from server');
+      }
     } catch (error) {
       console.error('Login failed:', error);
+      // Optionally navigate to error page
+      navigate('/error');
     }
   };
 
